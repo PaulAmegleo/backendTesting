@@ -4,13 +4,22 @@ import axios from 'axios';
 
 function BookDetails() {
   const { key } = useParams();
-  const [book, setBook] = useState(null);
+  const [bookDetails, setBookDetails] = useState(null);
+  const [authorName, setAuthorName] = useState(null);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
       try {
-        const response = await axios.get(`/book/${key}`);
-        setBook(response.data);
+        const response = await axios.get(`https://openlibrary.org/works/${key}.json`);
+        setBookDetails(response.data);
+        
+        // Extract author key from the first author in the list
+        const authorKey = response.data?.authors?.[0]?.author?.key;
+        if (authorKey) {
+          // Fetch author details using the author key
+          const authorResponse = await axios.get(`https://openlibrary.org${authorKey}.json`);
+          setAuthorName(authorResponse.data.name);
+        }
       } catch (error) {
         console.error('Error fetching book details:', error);
       }
@@ -19,20 +28,32 @@ function BookDetails() {
     fetchBookDetails();
   }, [key]);
 
-  if (!book) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div>
-      <h2>{book.title}</h2>
-      <p>Author: {book.authors && book.authors.map(author => author.name).join(', ')}</p>
-      <p>First published: {book.first_publish_year}</p>
-      <p>Description: {typeof book.description === 'object' ? book.description.value : book.description}</p>
-      {book.cover_image && (
-        <img src={book.cover_image} alt={`${book.title} cover`} />
+      {bookDetails ? (
+        <div>
+          <h2>{bookDetails.title}</h2>
+          {authorName ? (
+            <p>
+              Author: <a href={`https://openlibrary.org${bookDetails.authors[0].author.key}`} target="_blank" rel="noopener noreferrer">{authorName}</a> 
+            </p>
+          ) : (
+            <p>Loading author...</p>
+          )}
+          <p>First Published Year: {bookDetails.first_publish_year || 'Unknown'}</p>
+          <p>Ratings: {bookDetails.rating ? bookDetails.rating.average.toFixed(1) : 'Not Rated'}</p>
+          {bookDetails.covers && (
+            <img
+              src={`http://covers.openlibrary.org/b/id/${bookDetails.covers[0]}-M.jpg`}
+              alt={`${bookDetails.title} cover`}
+            />
+          )}
+          <p>Description: {bookDetails.description ? bookDetails.description.value : 'No description available'}</p>
+          <p>Genres: {bookDetails.subjects ? bookDetails.subjects.join(', ') : 'Unknown'}</p>
+        </div>
+      ) : (
+        <p>Loading...</p>
       )}
-      <p>Ratings: {book.ratings}</p>
     </div>
   );
 }

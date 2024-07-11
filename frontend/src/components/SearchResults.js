@@ -12,7 +12,7 @@ function SearchResults() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await axios.get('/search', { params: { query, type } });
+        const response = await axios.get('http://127.0.0.1:5000/search', { params: { query, type } });
         setResults(response.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -22,6 +22,7 @@ function SearchResults() {
     fetchResults();
   }, [query, type]);
 
+  
   return (
     <div>
       <h2>Search Results</h2>
@@ -29,7 +30,7 @@ function SearchResults() {
         {results.map((result, index) => (
           <li key={index}>
             {type === 'title' ? (
-              <Link to={`/book/${result.key}`}>
+              <Link to={`/book${result.key}`}>
                 {result.title}
                 {result.cover_id && (
                   <img
