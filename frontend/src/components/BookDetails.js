@@ -10,14 +10,14 @@ function BookDetails() {
   useEffect(() => {
     const fetchBookDetails = async () => {
       try {
-        const response = await axios.get(`https://openlibrary.org/works/${key}.json`);
+        const response = await axios.get(`http://127.0.0.1:5000/api/book/works/${key}`);
         setBookDetails(response.data);
         
         // Extract author key from the first author in the list
         const authorKey = response.data?.authors?.[0]?.author?.key;
         if (authorKey) {
           // Fetch author details using the author key
-          const authorResponse = await axios.get(`https://openlibrary.org${authorKey}.json`);
+          const authorResponse = await axios.get(`http://127.0.0.1:5000/api${authorKey}`);
           setAuthorName(authorResponse.data.name);
         }
       } catch (error) {
@@ -28,6 +28,16 @@ function BookDetails() {
     fetchBookDetails();
   }, [key]);
 
+  const getDescription = (description) => {
+    if (typeof description === 'string') {
+      return description;
+    } else if (description && typeof description === 'object') {
+      return description.value || 'No description available';
+    }
+    return 'No description available';
+  };
+
+  
   return (
     <div>
       {bookDetails ? (
@@ -48,7 +58,7 @@ function BookDetails() {
               alt={`${bookDetails.title} cover`}
             />
           )}
-          <p>Description: {bookDetails.description ? bookDetails.description.value : 'No description available'}</p>
+          <p>Description: {getDescription(bookDetails.description)}</p>
           <p>Genres: {bookDetails.subjects ? bookDetails.subjects.join(', ') : 'Unknown'}</p>
         </div>
       ) : (

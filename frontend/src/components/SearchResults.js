@@ -12,7 +12,7 @@ function SearchResults() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/search', { params: { query, type } });
+        const response = await axios.get('http://127.0.0.1:5000/api/search', { params: { q: query, type: type } });
         setResults(response.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -22,7 +22,6 @@ function SearchResults() {
     fetchResults();
   }, [query, type]);
 
-  
   return (
     <div>
       <h2>Search Results</h2>
