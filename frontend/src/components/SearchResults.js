@@ -31,12 +31,12 @@ function SearchResults() {
             {type === 'title' ? (
               <Link to={`/book${result.key}`}>
                 {result.title}
-                {result.cover_id && (
+                {result.image && (
                   <img
-                    src={`http://covers.openlibrary.org/b/id/${result.cover_id}-M.jpg`}
+                    src={result.image}
                     alt={`${result.title} cover`}
-                  />
-                )}
+                    style={{ width: '50px', height: '75px', marginLeft: '10px' }}
+                    />)}
               </Link>
             ) : (
               <Link to={`/author/${result.key}`}>

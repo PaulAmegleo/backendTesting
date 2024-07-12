@@ -80,10 +80,40 @@ def get_book_details(key):
     try:
         response = requests.get(url)
         response.raise_for_status()
-        return response.json()
+        book_data = response.json()
+
+        # Extract genres from subjects
+        genres = book_data.get('subjects', [])
+
+        # Process genres with NLP to get top 3
+        top_genres = extract_top_genres(genres)
+
+        # Add top genres to book data
+        book_data['genres'] = top_genres
+
+        return book_data
     except requests.exceptions.RequestException as e:
         print(f"Error occurred: {e}")
         return None
+
+def extract_top_genres(genres):
+    # Process the genres to remove duplicates and clean the data
+    processed_genres = [preprocess_text(genre) for genre in genres]
+    
+    # Use spaCy to get the most relevant genres
+    doc = nlp(' '.join(processed_genres))
+    genre_freq = {}
+    
+    for token in doc:
+        if token.pos_ in ['NOUN', 'PROPN']:
+            genre_freq[token.text] = genre_freq.get(token.text, 0) + 1
+    
+    # Sort genres by frequency and get the top 3
+    sorted_genres = sorted(genre_freq.items(), key=lambda x: x[1], reverse=True)
+    top_genres = [genre for genre, _ in sorted_genres[:3]]
+
+    return top_genres
+
 
 
 def preprocess_text(text):
@@ -184,6 +214,7 @@ def api_book_details_with_recommendations(key):
     details['recommendations'] = recommendations
 
     return jsonify(details)
+
 
 
 if __name__ == "__main__":
