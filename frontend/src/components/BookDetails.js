@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
 function BookDetails() {
@@ -11,10 +11,11 @@ function BookDetails() {
     const fetchBookDetails = async () => {
       try {
         const response = await axios.get(`http://127.0.0.1:5000/api/book/works/${key}`);
-        setBookDetails(response.data);
-        
+        const data = response.data;
+        setBookDetails(data);
+
         // Extract author key from the first author in the list
-        const authorKey = response.data?.authors?.[0]?.author?.key;
+        const authorKey = data?.authors?.[0]?.author?.key;
         if (authorKey) {
           // Fetch author details using the author key
           const authorResponse = await axios.get(`http://127.0.0.1:5000/api${authorKey}`);
@@ -29,15 +30,10 @@ function BookDetails() {
   }, [key]);
 
   const getDescription = (description) => {
-    if (typeof description === 'string') {
-      return description;
-    } else if (description && typeof description === 'object') {
-      return description.value || 'No description available';
-    }
-    return 'No description available';
+    if (!description) return 'No description available';
+    return typeof description === 'string' ? description : description.value;
   };
 
-  
   return (
     <div>
       {bookDetails ? (
@@ -45,7 +41,7 @@ function BookDetails() {
           <h2>{bookDetails.title}</h2>
           {authorName ? (
             <p>
-              Author: <a href={`https://openlibrary.org${bookDetails.authors[0].author.key}`} target="_blank" rel="noopener noreferrer">{authorName}</a> 
+              Author: <a href={`https://openlibrary.org${bookDetails.authors[0].author.key}`} target="_blank" rel="noopener noreferrer">{authorName}</a>
             </p>
           ) : (
             <p>Loading author...</p>
@@ -60,6 +56,19 @@ function BookDetails() {
           )}
           <p>Description: {getDescription(bookDetails.description)}</p>
           <p>Genres: {bookDetails.subjects ? bookDetails.subjects.join(', ') : 'Unknown'}</p>
+
+          <h3>Recommendations</h3>
+          <ul>
+            {bookDetails.recommendations && bookDetails.recommendations.length > 0 ? (
+              bookDetails.recommendations.map((recBook, index) => (
+                <li key={index}>
+                  <Link to={`/book/works/${recBook.key.replace('/works/', '')}`}>{recBook.title}</Link>
+                </li>
+              ))
+            ) : (
+              <p>No recommendations available</p>
+            )}
+          </ul>
         </div>
       ) : (
         <p>Loading...</p>

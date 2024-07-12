@@ -85,6 +85,7 @@ def get_book_details(key):
         print(f"Error occurred: {e}")
         return None
 
+
 def preprocess_text(text):
     stop_words = set(stopwords.words('english'))
     text = text.lower().translate(str.maketrans('', '', string.punctuation))
@@ -95,7 +96,8 @@ def recommend_books(base_book, books):
     book_keys = []
 
     for book in books:
-        details = get_book_details(book['key'])
+        book_key = book['key'].replace('/works/', '')
+        details = get_book_details(book_key)
         if details:
             description = details.get('description', '')
             if isinstance(description, dict):
@@ -166,12 +168,23 @@ def api_search():
     return jsonify(parsed_results)
 
 @app.route('/api/book/works/<key>', methods=['GET'])
-def api_book_details(key):
+def api_book_details_with_recommendations(key):
     details = get_book_details(key)
-    if details:
-        return jsonify(details)
-    else:
+    if not details:
         return jsonify({'error': 'Book details not found'}), 404
+
+    # Fetch search results to use for recommendations
+    search_results = search(details['title'])
+    books = parse_book_search_results(search_results)
+
+    # Generate recommendations
+    recommendations = recommend_books(details, books)
+
+    # Add recommendations to the details response
+    details['recommendations'] = recommendations
+
+    return jsonify(details)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
